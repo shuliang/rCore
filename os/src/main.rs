@@ -1,10 +1,16 @@
 #![no_std]
 #![no_main]
 #![feature(llvm_asm)]
+#![feature(global_asm)]
+#![feature(panic_info_message)]
 
 use core::fmt::{self, Write};
+use core::panic::PanicInfo;
 
-mod lang_items;
+// mod lang_items;
+mod sbi;
+
+global_asm!(include_str!("entry.asm"));
 
 const SYSCALL_EXIT: usize = 93;
 
@@ -25,17 +31,20 @@ pub fn sys_exit(xstate: i32) -> isize {
     syscall(SYSCALL_EXIT, [xstate as usize, 0, 0])
 }
 
-const SYSCALL_WRITE: usize = 64;
+const SYSCALL_CONSOLE_PUTCHAR: usize = 1;
 
-pub fn sys_write(fd: usize, buffer: &[u8]) -> isize {
-    syscall(SYSCALL_WRITE, [fd, buffer.as_ptr() as usize, buffer.len()])
+pub fn console_putchar(c: usize) {
+    syscall(SYSCALL_CONSOLE_PUTCHAR, [c, 0, 0]);
 }
 
 struct Stdout;
 
 impl Write for Stdout {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        sys_write(1, s.as_bytes());
+        // for c in s.chars() {
+        for c in s.bytes() {
+            console_putchar(c as usize);
+        }
         Ok(())
     }
 }
@@ -58,9 +67,42 @@ macro_rules! println {
     }
 }
 
+const SBI_SHUTDOWN: usize = 8;
+
+pub fn shutdown() -> ! {
+    sbi::sbi_call(SBI_SHUTDOWN, 0, 0, 0);
+    panic!("It should shutdown!");
+}
+
+fn clean_bss() {
+    extern "C" {
+        fn sbss();
+        fn ebss();
+    }
+    (sbss as usize..ebss as usize).for_each(|a| unsafe { (a as *mut u8).write_volatile(0) });
+}
+
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    if let Some(location) = info.location() {
+        println!(
+            "Panicked at {}:{} {}",
+            location.file(),
+            location.line(),
+            info.message().unwrap()
+        );
+    } else {
+        println!("Panicked: {}", info.message().unwrap());
+    }
+    shutdown()
+}
+
 #[no_mangle]
-extern "C" fn _start() {
+pub fn rust_main() -> ! {
+    clean_bss();
     println!("Hello, world!");
     println!("Powered by Rust with ♥");
-    sys_exit(9);
+    panic!("It should shutdown!");
+    // sys_exit(9);
+    // shutdown();
 }
