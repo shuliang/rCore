@@ -10,6 +10,7 @@ use log::{debug, error, info, trace, warn};
 mod logging;
 
 mod console;
+mod cpu;
 mod lang_items;
 mod sbi;
 
@@ -36,6 +37,9 @@ pub fn rust_main() -> ! {
         fn ebss();
         fn boot_stack();
         fn boot_stack_top();
+    }
+    unsafe {
+        cpu::set_cpu_id(0);
     }
     clean_bss();
     logging::init();

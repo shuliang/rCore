@@ -50,7 +50,12 @@ impl Log for SimpleLogger {
             return;
         }
         print_in_color(
-            format_args!("[{:>5}][{},-] {}\n", record.level(), 0, record.args()),
+            format_args!(
+                "[{:>5}][{},-] {}\n",
+                record.level(),
+                crate::cpu::id(),
+                record.args()
+            ),
             level_to_color_code(record.level()),
         );
     }
