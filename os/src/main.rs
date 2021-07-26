@@ -9,12 +9,16 @@ use log::{debug, error, info, trace, warn};
 #[macro_use]
 mod logging;
 
+mod batch;
 mod console;
 mod cpu;
 mod lang_items;
 mod sbi;
+mod syscall;
+mod trap;
 
 global_asm!(include_str!("entry.asm"));
+global_asm!(include_str!("link_app.S"));
 
 fn clean_bss() {
     extern "C" {
@@ -43,7 +47,7 @@ pub fn rust_main() -> ! {
     }
     clean_bss();
     logging::init();
-    println!("Hello, world!");
+    println!("[kernel] Hello, world!");
     error!("This is a error msg.");
     warn!("This is a warn msg.");
     info!("This is a info msg.");
@@ -60,5 +64,7 @@ pub fn rust_main() -> ! {
     );
     trace!(".bss [{:#x}, {:#x})", sbss as usize, ebss as usize);
 
-    panic!("It should shutdown!");
+    trap::init();
+    batch::init();
+    batch::run_next_app();
 }
