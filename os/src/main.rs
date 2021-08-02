@@ -9,12 +9,14 @@ use log::{debug, error, info, trace, warn};
 #[macro_use]
 mod logging;
 
-mod batch;
+mod config;
 mod console;
 mod cpu;
 mod lang_items;
+mod loader;
 mod sbi;
 mod syscall;
+mod task;
 mod trap;
 
 global_asm!(include_str!("entry.asm"));
@@ -65,6 +67,7 @@ pub fn rust_main() -> ! {
     trace!(".bss [{:#x}, {:#x})", sbss as usize, ebss as usize);
 
     trap::init();
-    batch::init();
-    batch::run_next_app();
+    loader::load_apps();
+    task::run_first_task();
+    panic!("Unreachable in rust_main!");
 }
