@@ -9,3 +9,7 @@ edition = "2018"
 lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
 log = "0.4.14"
 riscv = { git = "https://github.com/rcore-os/riscv", features = ["inline-asm"] }
+
+[features]
+board_qemu = []
+board_k210 = []
