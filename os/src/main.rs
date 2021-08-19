@@ -3,6 +3,12 @@
 #![feature(llvm_asm)]
 #![feature(global_asm)]
 #![feature(panic_info_message)]
+#![feature(alloc_error_handler)]
+
+extern crate alloc;
+
+#[macro_use]
+extern crate bitflags;
 
 use log::{debug, error, info, trace, warn};
 
@@ -14,6 +20,7 @@ mod console;
 mod cpu;
 mod lang_items;
 mod loader;
+mod mm;
 mod sbi;
 mod syscall;
 mod task;
@@ -33,18 +40,6 @@ fn clean_bss() {
 
 #[no_mangle]
 pub fn rust_main() -> ! {
-    extern "C" {
-        fn stext();
-        fn etext();
-        fn srodata();
-        fn erodata();
-        fn sdata();
-        fn edata();
-        fn sbss();
-        fn ebss();
-        fn boot_stack();
-        fn boot_stack_top();
-    }
     unsafe {
         cpu::set_cpu_id(0);
     }
@@ -56,19 +51,12 @@ pub fn rust_main() -> ! {
     info!("This is a info msg.");
     debug!("This is a debug mesg.");
     trace!("This is a trace msg.");
-
     println!("Powered by Rust with ♥");
-    error!(".text [{:#x}, {:#x})", stext as usize, etext as usize);
-    warn!(".rodata [{:#x}, {:#x})", srodata as usize, erodata as usize);
-    info!(".data [{:#x}, {:#x})", sdata as usize, edata as usize);
-    debug!(
-        "boot_stack [{:#x}, {:#x})",
-        boot_stack as usize, boot_stack_top as usize
-    );
-    trace!(".bss [{:#x}, {:#x})", sbss as usize, ebss as usize);
 
+    mm::init();
+    println!("[kernel] back to world!");
+    mm::remap_test();
     trap::init();
-    loader::load_apps();
     trap::enable_timer_interrupt();
     timer::set_next_trigger();
     task::run_first_task();
