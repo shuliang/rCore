@@ -32,7 +32,6 @@ pub extern "C" fn _start() -> ! {
             .init(HEAP_SPACE.as_ptr() as usize, USER_HEAP_SIZE);
     }
     exit(main());
-    panic!("unreachable after sys_exit!");
 }
 
 #[linkage = "weak"]
