@@ -18,6 +18,7 @@ mod logging;
 mod config;
 mod console;
 mod cpu;
+mod fs;
 mod lang_items;
 mod loader;
 mod mm;
