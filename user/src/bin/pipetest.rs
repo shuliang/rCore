@@ -32,6 +32,8 @@ pub fn main() -> i32 {
         // close read end
         close(pipe_fd[0]);
         assert_eq!(write(pipe_fd[1], STR.as_bytes()), STR.len() as isize);
+        // close write end
+        close(pipe_fd[1]);
         let mut child_exit_code: i32 = 0;
         wait(&mut child_exit_code);
         assert_eq!(child_exit_code, 0);
