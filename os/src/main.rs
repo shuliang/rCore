@@ -18,6 +18,7 @@ mod logging;
 mod config;
 mod console;
 mod cpu;
+mod drivers;
 mod fs;
 mod lang_items;
 mod loader;
@@ -57,12 +58,12 @@ pub fn rust_main() -> ! {
     mm::init();
     println!("[kernel] back to world!");
     mm::remap_test();
-    task::add_initproc();
-    println!("after initproc!");
     trap::init();
     trap::enable_timer_interrupt();
     timer::set_next_trigger();
-    loader::list_apps();
+    fs::list_apps();
+    task::add_initproc();
+    println!("after initproc!");
     task::run_tasks();
     panic!("Unreachable in rust_main!");
 }
